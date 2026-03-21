@@ -313,11 +313,3 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"TorqueControlTune", {PERSISTENT | BACKUP, FLOAT, "0.0"}},
     {"TorqueControlTuneBig", {PERSISTENT | BACKUP, FLOAT, "1.0"}},  // big-model tune
     {"SpeedDependentTorqueToggle", {PERSISTENT | BACKUP, BOOL, "0"}},
-    {"TorqueParamsOverrideEnabled", {PERSISTENT | BACKUP, BOOL, "0"}},
-    {"TorqueParamsOverrideFriction", {PERSISTENT | BACKUP, FLOAT, "0.1"}},
-    {"TorqueParamsOverrideLatAccelFactor", {PERSISTENT | BACKUP, FLOAT, "2.5"}},
-    // Ensures steer-to-zero Mazda torque defaults are seeded once.
-    {"MazdaTorqueDefaultsApplied", {PERSISTENT | BACKUP, BOOL}},
-    // Tune version last seeded for the steer-to-zero Mazda EPS; a bump re-seeds everyone once.
-    {"MazdaTorqueTuneSeeded", {PERSISTENT | BACKUP, FLOAT}},
-};
