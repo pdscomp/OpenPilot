@@ -42,9 +42,13 @@ PATCH_EXT_PARAMS = 'openpilot.sunnypilot.selfdrive.locationd.torqued_ext.Params'
 
 
 def _setup_ext_mock(mock_ext_params_cls, speed_dep_on):
-  """Configure the torqued_ext Params mock for toggle state."""
+  """Configure the torqued_ext Params mock for toggle state.
+
+  Speed-dep learning requires the full activation chain the UI enforces before the toggle
+  is even reachable (Enforce Torque Control + Self-Tune), so enable those alongside it —
+  otherwise speed_binned stays False and the learner (correctly) never runs."""
   def _get_bool(param):
-    if param == "SpeedDependentTorqueToggle":
+    if param in ("SpeedDependentTorqueToggle", "EnforceTorqueControl", "LiveTorqueParamsToggle"):
       return speed_dep_on
     return False
   mock_ext_params_cls.return_value.get_bool.side_effect = _get_bool
@@ -222,7 +226,7 @@ class TestBackwardCompatibility:
       assert msg.liveTorqueParameters.calPerc == 0
 
 
-class TestCentersToBoumds:
+class TestCentersToBounds:
   """Tests for _centers_to_bounds static method."""
 
   def test_midpoints_between_centers(self):
@@ -533,8 +537,8 @@ class TestOnTorquePointWhenOff:
 
 
 @pytest.mark.skipif(SPEED_DEP_FINGERPRINT is None, reason="No cars in speed_dependent.toml")
-class TestEnsureSpeedBinsIdempotency:
-  """_ensure_speed_bins should not re-init on subsequent calls."""
+class TestSpeedBinInitIdempotency:
+  """Lazy speed-bin init (triggered by _on_torque_point) must not re-init on later points."""
 
   @patch(PATCH_EXT_PARAMS)
   @patch(PATCH_PARAMS)

@@ -247,7 +247,8 @@ class TestLearnerSanityBounds:
     mock_params_cls.return_value.get.return_value = None
     mock_ext_cls.return_value.get_bool.side_effect = lambda k: {
       'SpeedDependentTorqueToggle': True,
-      'EnforceTorqueControl': False,
+      'EnforceTorqueControl': True,
+      'LiveTorqueParamsToggle': True,
       'LiveTorqueParamsRelaxedToggle': False,
     }.get(k, False)
     mock_ext_cls.return_value.get.return_value = None
@@ -276,6 +277,8 @@ class TestLearnerSanityBounds:
     mock_params_cls.return_value.get.return_value = None
     mock_ext_cls.return_value.get_bool.side_effect = lambda k: {
       'SpeedDependentTorqueToggle': True,
+      'EnforceTorqueControl': True,
+      'LiveTorqueParamsToggle': True,
     }.get(k, False)
     mock_ext_cls.return_value.get.return_value = None
 
