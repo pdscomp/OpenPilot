@@ -170,6 +170,7 @@ def initialize_params(params) -> list[dict[str, Any]]:
 
   # mazda
   keys.extend([
+    "TorqueInterceptorEnabled",
     "MazdaTjaButton",
     "MazdaMovingTakeover",
   ])
