@@ -201,6 +201,7 @@ EVENTS_SP: dict[int, dict[str, Alert | AlertCallbackType]] = {
     ET.NO_ENTRY: NoEntryAlert("Brake Hold Active"),
   },
 
+
   EventNameSP.silentWrongGear: {
     ET.WARNING: Alert(
       "",
