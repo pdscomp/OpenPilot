@@ -16,7 +16,6 @@ from openpilot.common.swaglog import cloudlog
 from openpilot.common.hardware.hw import Paths
 
 from openpilot.cereal import messaging, custom
-from openpilot.sunnypilot.models.default_bootstrap import maybe_apply_default_model
 from openpilot.sunnypilot.models.fetcher import ModelFetcher
 from openpilot.sunnypilot.models.helpers import (ACTIVE_BUNDLE_KEYS, _bundle_is_valid_locally, get_active_bundle, get_selected_bundle,
                                                   resolve_bundle_by_ref, validate_active_bundles, verify_file)
@@ -352,7 +351,6 @@ class ModelManagerSP:
         self.available_models = self.source_models[ModelFetcher.active_source(self.chestnut_present)]
         validate_active_bundles(self.params, self.source_models)
         self.active_bundle = get_active_bundle(self.params, chestnut=self.chestnut_present)
-        maybe_apply_default_model(self.params, self.source_models["qcom"])
 
         if self.chestnut_present and get_selected_bundle(self.params, "chestnut") is not None and get_selected_bundle(self.params, "qcom") is None:
           if self.params.get("ModelManager_DownloadRef") is None:

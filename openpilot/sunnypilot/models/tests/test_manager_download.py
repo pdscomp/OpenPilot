@@ -779,7 +779,6 @@ class TestBigModelSlotWithoutChestnut(ManagerDownloadTestBase):
     self.manager.model_fetcher = mock.MagicMock()
     self.manager.model_fetcher.get_bundles_for_source.return_value = []
     with mock.patch.object(manager_module, 'Ratekeeper') as rk, \
-         mock.patch.object(manager_module, 'maybe_apply_default_model'), \
          mock.patch.object(manager_module, 'validate_active_bundles'):
       rk.return_value.keep_time.side_effect = [None, None, StopIteration]   # two ticks, then out of the loop
       with self.assertRaises(StopIteration):
