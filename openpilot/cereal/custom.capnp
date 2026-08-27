@@ -404,6 +404,12 @@ struct CarControlSP @0xa5cd762cd951a455 {
   intelligentCruiseButtonManagement @4 :IntelligentCruiseButtonManagement;
   turnAssistDEPRECATED @5 :TurnAssistDEPRECATED;  # low-speed turn assist removed 2026-09; ordinal kept for old logs
   zoompilot @6 :CarControlZP;
+  turnAssist @7 :TurnAssist;
+
+  struct TurnAssist {
+    holdCurvature @0 :Float32;
+    leadCurvature @1 :Float32;
+  }
 
   struct TurnAssistDEPRECATED {
     holdCurvature @0 :Float32;
