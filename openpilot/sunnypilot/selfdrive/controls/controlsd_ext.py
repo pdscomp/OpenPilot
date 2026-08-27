@@ -244,6 +244,9 @@ class ControlsExt(ModelStateBase):
     maneuver mode's scripted commands must pass through the stock clip untouched."""
     self.note_lat_active(lat_active)
     if sm.valid['lateralManeuverPlan']:
+      # clear the whole assist layer: state armed before maneuver mode (a held floor, a
+      # lane-change arrest in progress) must not resume stale after it
+      self.turn_assist.reset()
       # a lane-change unwind armed before maneuver mode must not resume stale after it
       self.lane_change_smoothing.reset()
       return new_desired_curvature, 1.0
