@@ -606,8 +606,15 @@ struct CarStateZP @0xc879af11c43cb400 {
 
 struct CarControlZP @0xaadf9bc39b7bd41e {
   laneChangeSmoothing @0 :LaneChangeSmoothing;
+  lateralExtension @1 :LateralExtension;
 
   struct LaneChangeSmoothing {
     jerkFactor @0 :Float32;
   }
+}
+
+enum LateralExtension {
+  none @0;
+  jerkAware @1;
+  neuralNetwork @2;
 }
