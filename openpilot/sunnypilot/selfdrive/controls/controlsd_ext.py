@@ -13,7 +13,7 @@ from openpilot.cereal import log, custom
 
 from opendbc.car import structs
 from opendbc.sunnypilot.car.interfaces import get_steer_slew_schedule
-from openpilot.common.params import Params
+from openpilot.common.params import ParamKeyFlag, Params
 from openpilot.common.realtime import DT_CTRL
 from openpilot.common.swaglog import cloudlog
 from openpilot.sunnypilot import PARAMS_UPDATE_PERIOD
@@ -31,6 +31,44 @@ from openpilot.sunnypilot.selfdrive.controls.lib.torque_tune import resolved_tun
 # a model change: a one-frame drop (a steer fault flicker) would otherwise swap and resume
 # steering on a controller no inactive frame had primed
 TUNE_SWAP_INACTIVE_FRAMES = round(0.5 / DT_CTRL)
+
+
+# Drive-start params dump: every set key except DONT_LOG secrets and oversized blobs,
+# published once on the first carControlSP of the drive so rlogs record the exact
+# settings that produced them (CX-8 controller attribution took a day without this).
+PARAM_DUMP_VALUE_CAP = 512
+
+
+def build_param_dump(params: Params) -> list[dict]:
+  dont_log = set(params.all_keys(flag=ParamKeyFlag.DONT_LOG))
+  dump = []
+  for key_raw in sorted(k for k in params.all_keys() if k is not None):
+    if key_raw in dont_log:
+      continue
+    key = key_raw.decode()
+    key_type = params.get_type(key)
+    value = params.get(key)
+    if value is None:
+      continue
+    raw = value if isinstance(value, bytes) else str(value).encode()
+    if len(raw) > PARAM_DUMP_VALUE_CAP:
+      continue
+    # ParamKeyType ordinals match CarControlSP.ParamType exactly
+    dump.append({"key": key, "type": int(key_type), "value": raw})
+  return dump
+
+
+def lateral_extension_of(lac):
+  """Which torque-space extension currently owns the output, if any. v2's host
+  disables the overrides, so this reads none there even with NNLC params set."""
+  ext = getattr(lac, "extension", None)
+  if ext is None or not ext.overrides_output:
+    return custom.LateralExtension.none
+  if ext._nnlc_enabled:
+    return custom.LateralExtension.neuralNetwork
+  if ext._jerk_aware_enabled:
+    return custom.LateralExtension.jerkAware
+  return custom.LateralExtension.none
 
 
 class ControlsExt(ModelStateBase):
@@ -64,6 +102,7 @@ class ControlsExt(ModelStateBase):
 
     self.sm_services_ext = ['radarState', 'selfdriveStateSP', LIVE_TORQUE_PARAMETERS_SP_SERVICE]
     self.pm_services_ext = ['carControlSP']
+    self._param_dump_pending = True
 
   def initialize_lateral_control(self, lac, CI, dt):
     """One controller per model size, built once; every drive starts on the small model's."""
@@ -202,6 +241,12 @@ class ControlsExt(ModelStateBase):
 
   def state_control_ext(self, sm: messaging.SubMaster) -> custom.CarControlSP:
     CC_SP = custom.CarControlSP.new_message()
+
+    # Once per drive: the exact settings this log was produced under
+    if self._param_dump_pending:
+      CC_SP.params = build_param_dump(self.params)
+      self._param_dump_pending = False
+    CC_SP.zoompilot.lateralExtension = lateral_extension_of(getattr(self, "LaC", None))
 
     self.get_lead_data(CC_SP.leadOne, sm['radarState'].leadOne)
     self.get_lead_data(CC_SP.leadTwo, sm['radarState'].leadTwo)
