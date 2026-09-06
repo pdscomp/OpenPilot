@@ -20,7 +20,7 @@ from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.sunnypilot.mads.helpers import MadsSteeringModeOnBrake, get_mads_limited_brands, offroad_brand
 from openpilot.sunnypilot.selfdrive.controls.lib.auto_lane_change import AUTO_LANE_CHANGE_TIMER, AutoLaneChangeMode
 from openpilot.sunnypilot.selfdrive.controls.lib.lane_change_smoothing import LEVEL_OFF, read_level
-from openpilot.sunnypilot.selfdrive.controls.lib.torque_tune import TUNE_PARAM_BY_SIZE, jerk_aware_has_effect, resolved_tune_versions, versions_by_label
+from openpilot.sunnypilot.selfdrive.controls.lib.torque_tune import TUNE_PARAM_BY_SIZE, jerk_aware_has_effect, mazda_v2_ab_available, resolved_tune_versions, versions_by_label
 from openpilot.system.ui.lib.application import gui_app
 
 MADS_STEERING_MODE_LABELS = [tr("remain"), tr("pause"), tr("disengage")]
@@ -92,6 +92,7 @@ class SteeringLayoutMici(NavScroller):
     self._mads_tja = BigParamControlSP(tr("tja button"), "MazdaTjaButton", depends_on=lambda: self._mads_toggle._checked)
     self._mads_tja.set_enabled(ui_state.is_offroad)
     self._mads_tja.set_visible(self._is_mazda)
+    self._tq_mazda_v2_mode.set_visible(mazda_v2_ab_available(ui_state.params, ui_state.CP))
     self._mads_view = self._mads_settings_btn.link_sub_panel([self._mads_toggle, self._mads_main_cruise, self._mads_unified,
                                                               self._mads_steering, self._mads_tja])
 
@@ -137,6 +138,9 @@ class SteeringLayoutMici(NavScroller):
                          for big, size in ((False, tr("small models")), (True, tr("big models")))]
 
     self._tq_predictive = BigParamControl(tr("predictive turn-in"), "TorqueTuneV2PredictiveTurnIn")
+    self._tq_mazda_v2_mode = BigMultiParamToggleSP(tr("B: 5–10 m/s test\nMax unchanged\nReboot to apply"), "MazdaTorqueV2Mode",
+                                                   [tr("A"), tr("B")], values=[0, 1])
+    self._tq_mazda_v2_mode.set_enabled(ui_state.is_offroad)
     # v2-only mechanism: enabled offroad while some model size will actually run v2
     self._tq_predictive.set_enabled(lambda: ui_state.is_offroad() and any(v == 2.0 for v in resolved_tune_versions(ui_state.params).values()))
 
@@ -176,7 +180,7 @@ class SteeringLayoutMici(NavScroller):
       item.set_enabled(ui_state.is_offroad)
       item.set_superseded(lambda: not self._enforce_torque)  # torque-tuned cars run v0 without it
     self._tq_view = self._torque_settings_btn.link_sub_panel([self._torque_toggle, self._jerk_aware_toggle,
-                                                              *self._tq_versions, self._tq_predictive] + self._tq_items_rest)
+                                                              *self._tq_versions, self._tq_predictive, self._tq_mazda_v2_mode] + self._tq_items_rest)
 
   def _update_state(self):
     super()._update_state()
