@@ -96,12 +96,13 @@ class SteeringLayoutMici(NavScroller):
     # AutoLaneChangeTimer stores a mode from -1 through 5, not a boolean.
     self._lc_timer = BigMultiParamToggleSP(tr("auto lane change"), "AutoLaneChangeTimer",
                                            list(ALC_LABELS.values()), values=list(ALC_LABELS))
+    self._lc_one_per_signal = BigParamControl(tr("one per signal"), "OneLaneChange")
     self._lc_bsm = BigParamControlSP(tr("bsm delay"), "AutoLaneChangeBsmDelay",
                                      depends_on=lambda: self._bsm_applies(self._alc_val) and self._car_has_bsm())
     self._lc_road_edge = BigParamControl(tr("road edge block"), "RoadEdgeLaneChangeEnabled")
     # off = stock; every level is a slower lane change than stock
     self._lc_level = BigMultiParamToggleSP(tr("lane change") + "\n" + tr("smoothing"), "LaneChangeSmoothing", LC_LEVEL_LABELS)
-    self._lc_view = self._lane_change_btn.link_sub_panel([self._lc_timer, self._lc_bsm, self._lc_road_edge,
+    self._lc_view = self._lane_change_btn.link_sub_panel([self._lc_timer, self._lc_one_per_signal, self._lc_bsm, self._lc_road_edge,
                                                           self._lc_level])
 
     self._blinker_toggle = BigParamControl(tr("enable blinker pause"), "BlinkerPauseLateralControl")
