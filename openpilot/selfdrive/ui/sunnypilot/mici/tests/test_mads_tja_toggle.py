@@ -16,7 +16,7 @@ from openpilot.selfdrive.ui.sunnypilot.mici.tests.test_mici_settings import gui,
 
 
 def _bundle(p, brand):
-  p.put("CarPlatformBundle", {"brand": brand, "platform": "X", "name": "X"})
+  p.put("CarPlatformBundle", {"brand": brand, "platform": "X", "name": "X"}, block=True)
 
 
 class TestMadsTjaToggle:
