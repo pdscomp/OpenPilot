@@ -25,7 +25,7 @@ from openpilot.sunnypilot.selfdrive.controls.lib.lane_change_smoothing import La
 from openpilot.sunnypilot.selfdrive.controls.lib.latcontrol_torque_v0 import LatControlTorque as LatControlTorqueV0
 from openpilot.sunnypilot.selfdrive.controls.lib.latcontrol_torque_v2 import LatControlTorque as LatControlTorqueV2
 from openpilot.sunnypilot.selfdrive.controls.lib.steer_limit import classify
-from openpilot.sunnypilot.selfdrive.controls.lib.torque_tune import resolved_tune_versions
+from openpilot.sunnypilot.selfdrive.controls.lib.torque_tune import MazdaTorqueV2Mode, resolved_mazda_v2_mode, resolved_tune_versions
 
 # how long lateral control has to be inactive, continuously, before the torque tune follows
 # a model change: a one-frame drop (a steer fault flicker) would otherwise swap and resume
@@ -63,12 +63,12 @@ def lateral_extension_of(lac):
   disables the overrides, so this reads none there even with NNLC params set."""
   ext = getattr(lac, "extension", None)
   if ext is None or not ext.overrides_output:
-    return custom.LateralExtension.none
+    return custom.CarControlSP.LateralExtension.none
   if ext._nnlc_enabled:
-    return custom.LateralExtension.neuralNetwork
+    return custom.CarControlSP.LateralExtension.neuralNetwork
   if ext._jerk_aware_enabled:
-    return custom.LateralExtension.jerkAware
-  return custom.LateralExtension.none
+    return custom.CarControlSP.LateralExtension.jerkAware
+  return custom.CarControlSP.LateralExtension.none
 from openpilot.sunnypilot.selfdrive.controls.lib.turn_assist import TurnAssistController
 
 
@@ -109,6 +109,15 @@ def seed_ti_defaults(params: Params, CP) -> None:
   for key, value in TI_TUNE_SEEDS.items():
     if params.get(key) is None:
       params.put(key, value, block=True)
+
+
+def torque_v2_mode_of(lac):
+  mode = getattr(lac, "mazda_v2_mode", None)
+  if mode == MazdaTorqueV2Mode.A:
+    return custom.CarControlSP.TorqueV2Mode.modeA
+  if mode == MazdaTorqueV2Mode.B:
+    return custom.CarControlSP.TorqueV2Mode.modeB
+  return custom.CarControlSP.TorqueV2Mode.notApplicable
 
 
 class ControlsExt(ModelStateBase):
@@ -161,7 +170,7 @@ class ControlsExt(ModelStateBase):
       if version == 0.0:
         return LatControlTorqueV0(self.CP, self.CP_SP, CI, dt)
       if version == 2.0:
-        return LatControlTorqueV2(self.CP, self.CP_SP, CI, dt)
+        return LatControlTorqueV2(self.CP, self.CP_SP, CI, dt, mazda_v2_mode=resolved_mazda_v2_mode(self.params, self.CP))
       return lac
 
     built = {version: build(version) for version in dict.fromkeys(versions.values())}
@@ -292,6 +301,7 @@ class ControlsExt(ModelStateBase):
       CC_SP.params = build_param_dump(self.params)
       self._param_dump_pending = False
     CC_SP.zoompilot.lateralExtension = lateral_extension_of(getattr(self, "LaC", None))
+    CC_SP.torqueV2Mode = torque_v2_mode_of(getattr(self, "LaC", None))
 
     self.get_lead_data(CC_SP.leadOne, sm['radarState'].leadOne)
     self.get_lead_data(CC_SP.leadTwo, sm['radarState'].leadTwo)

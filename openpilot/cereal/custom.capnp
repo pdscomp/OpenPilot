@@ -415,6 +415,19 @@ struct CarControlSP @0xa5cd762cd951a455 {
     holdCurvature @0 :Float32;
     leadCurvature @1 :Float32;
   }
+  torqueV2Mode @8 :TorqueV2Mode;
+
+  enum TorqueV2Mode {
+    notApplicable @0;
+    modeA @1;
+    modeB @2;
+  }
+
+  enum LateralExtension {
+    none @0;
+    jerkAware @1;
+    neuralNetwork @2;
+  }
 
   struct TurnAssistDEPRECATED {
     holdCurvature @0 :Float32;
@@ -620,7 +633,7 @@ struct CarStateZP @0xc879af11c43cb400 {
 
 struct CarControlZP @0xaadf9bc39b7bd41e {
   laneChangeSmoothing @0 :LaneChangeSmoothing;
-  lateralExtension @1 :LateralExtension;
+  lateralExtension @1 :CarControlSP.LateralExtension;
 
   struct LaneChangeSmoothing {
     jerkFactor @0 :Float32;
