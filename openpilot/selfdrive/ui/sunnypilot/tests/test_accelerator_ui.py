@@ -83,6 +83,8 @@ class FakeSM:
       return type("DS", (), {"chestnutPresent": self.board})()
     if name == "modelDataV2SP":
       return type("SP", (), {"acceleratorState": self.state})()
+    if name == "carOutput":  # ui_state reads torque utilization on every update
+      return type("CO", (), {"actuatorsOutput": type("AO", (), {"torque": 0.0})()})()
     assert name == "modelV2"
     return type("M", (), {"big": self.big})()
 
